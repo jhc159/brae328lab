@@ -1,0 +1,102 @@
+```dart
+// ADXL335 Accelerometer Reading for Arduino Uno
+// Reads acceleration data every 2ms and converts to g-force
+// Collision detection using WHILE statement approach
+
+// Analog pins for ADXL335
+const int X_PIN = A0;
+const int Y_PIN = A1;
+const int Z_PIN = A2;
+
+// LED pin for collision detection indicator
+const int LED_PIN = 13;
+
+// Constants for conversion
+const float REF_VOLTAGE = 5.0;
+const float ADC_MAX = 1023.0;
+const float OFFSET = 1.65;
+const float SENSITIVITY = 0.33;
+
+// Collision detection threshold
+const float COLLISION_THRESHOLD = 2.8; // ±2.8g
+
+// Timing variables
+unsigned long lastReadTime = 0;
+const unsigned long READ_INTERVAL = 2; // 2 milliseconds
+
+void setup() {
+  // Initialize serial communication at 9600 baud
+  Serial.begin(9600);
+  
+  // Configure analog pins as inputs
+  pinMode(X_PIN, INPUT);
+  pinMode(Y_PIN, INPUT);
+  pinMode(Z_PIN, INPUT);
+  
+  // Configure LED pin as output
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  
+  Serial.println("ADXL335 Accelerometer Reader Initialized");
+  Serial.println("Time(ms)\tAx(g)\tAy(g)\tAz(g)");
+}
+
+void loop() {
+  // Check if it's time to take a reading (every 2ms)
+  if (millis() - lastReadTime >= READ_INTERVAL) {
+    lastReadTime = millis();
+    
+    // Read analog values from accelerometer
+    int rawX = analogRead(X_PIN);
+    int rawY = analogRead(Y_PIN);
+    int rawZ = analogRead(Z_PIN);
+    
+    // Convert ADC values to g-force using the provided formula
+    // Axout = (((X axis ADC value *5.0) / 1023.0) – 1.65) / 0.33
+    float Axout = (((rawX * REF_VOLTAGE) / ADC_MAX) - OFFSET) / SENSITIVITY;
+    float Ayout = (((rawY * REF_VOLTAGE) / ADC_MAX) - OFFSET) / SENSITIVITY;
+    float Azout = (((rawZ * REF_VOLTAGE) / ADC_MAX) - OFFSET) / SENSITIVITY;
+    
+    // Collision detection using while statement approach
+    bool collisionDetected = false;
+    
+    // Check if any acceleration exceeds ±2.8g threshold
+    if (abs(Axout) > COLLISION_THRESHOLD || abs(Ayout) > COLLISION_THRESHOLD || abs(Azout) > COLLISION_THRESHOLD) {
+      collisionDetected = true;
+      Serial.println("COLLISION DETECTED!");
+    }
+    
+    // Use while statement to handle LED blinking for 3 seconds
+    if (collisionDetected) {
+      unsigned long collisionStartTime = millis();
+      
+      // While 3 seconds haven't elapsed, keep blinking
+      while (millis() - collisionStartTime < 3000) {
+        unsigned long elapsedTime = millis() - collisionStartTime;
+        
+        // Blink LED with 200ms on/off pattern
+        if ((elapsedTime / 200) % 2 == 0) {
+          digitalWrite(LED_PIN, HIGH);
+        } else {
+          digitalWrite(LED_PIN, LOW);
+        }
+        
+        // Small delay to prevent overwhelming the loop
+        delayMicroseconds(10);
+      }
+      
+      // Turn off LED after 3 seconds
+      digitalWrite(LED_PIN, LOW);
+    }
+    
+    // Send data to serial port
+    Serial.print(millis());
+    Serial.print("\t");
+    Serial.print(Axout, 3); // Print with 3 decimal places
+    Serial.print("\t");
+    Serial.print(Ayout, 3);
+    Serial.print("\t");
+    Serial.println(Azout, 3);
+  }
+}
+```
