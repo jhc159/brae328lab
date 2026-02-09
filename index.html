@@ -444,6 +444,7 @@
 
         <div class="visualization-section">
             <h3>🎯 3D Object Gesture Visualization</h3>
+            <p style="text-align: center; color: #666; font-size: 0.95em; margin-bottom: 15px;"><em>Tetrahedron rotating based on accelerometer angles</em></p>
             <canvas id="canvas3d"></canvas>
             
             <div class="gesture-info">
@@ -669,14 +670,12 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             
             // Create cube
-            const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+            const geometry = new THREE.TetrahedronGeometry(1.2, 0);
             const materials = [
-                new THREE.MeshPhongMaterial({ color: 0x667eea }),  // Right (X)
-                new THREE.MeshPhongMaterial({ color: 0xf5576c }),  // Left (X)
-                new THREE.MeshPhongMaterial({ color: 0x00f2fe }),  // Top (Z)
-                new THREE.MeshPhongMaterial({ color: 0x4facfe }),  // Bottom (Z)
-                new THREE.MeshPhongMaterial({ color: 0xf093fb }),  // Front (Y)
-                new THREE.MeshPhongMaterial({ color: 0xfa7921})   // Back (Y)
+                new THREE.MeshPhongMaterial({ color: 0x667eea }),  // Face 1
+                new THREE.MeshPhongMaterial({ color: 0xf5576c }),  // Face 2
+                new THREE.MeshPhongMaterial({ color: 0x00f2fe }),  // Face 3
+                new THREE.MeshPhongMaterial({ color: 0xf093fb })   // Face 4
             ];
             
             cube = new THREE.Mesh(geometry, materials);
