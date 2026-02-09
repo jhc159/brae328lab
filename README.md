@@ -21,13 +21,23 @@ A full-featured web application has been created that displays:
 
 ### 4.2 Plot the angles on the webpage
 
-**Status**: IN PROGRESS
+**Status**: COMPLETED ✅
 
-The application already displays angles in:
-- Large, color-coded angle cards
-- Real-time updated values
-- Data history timeline
-- Ready for graphing library integration (Chart.js, D3.js, etc.)
+The application now includes a real-time interactive angle plot featuring:
+- Interactive line chart showing all three angles (Theta, Psi, Phi)
+- Color-coded lines: Blue (Theta), Pink (Psi), Cyan (Phi)
+- Last 50 data points displayed for trend visualization
+- Hover tooltips showing exact values
+- Smooth animations and responsive design
+- Y-axis range: -90° to +90°
+- Time-based X-axis labels
+
+**Features**:
+- Real-time updates as data arrives
+- Legend with angle labels
+- Grid lines for easy reading
+- Responsive canvas that adapts to screen size
+- Performance optimized with `update('none')` for smooth rendering
 
 ### 4.3 Display and visualize the gesture of a 3D object
 
@@ -123,12 +133,14 @@ brae328lab/
 ### Web Application
 ✅ Display Theta, Psi, Phi angles in real-time  
 ✅ Show raw ADC values and voltage readings  
+✅ **Interactive real-time angle plot (Chart.js)** ⭐  
 ✅ Maintain 20-entry data history  
 ✅ Manual angle input for testing  
 ✅ Random data generator for demos  
 ✅ Responsive design (desktop/mobile)  
 ✅ Color-coded display cards  
 ✅ Real-time updates via WebSocket or polling  
+✅ Connection status indicator
 
 ### Backend Server
 ✅ Express.js HTTP server  

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inclination Angle Data Display</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
     <style>
         * {
             margin: 0;
@@ -246,6 +247,12 @@
             margin-bottom: 15px;
             font-size: 1.2em;
         }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            margin-bottom: 15px;
+        }
 
         .history-list {
             max-height: 200px;
@@ -382,7 +389,12 @@
         </div>
 
         <div class="chart-container">
-            <h3>📊 Data History</h3>
+            <h3>📊 Real-time Angle Plot</h3>
+            <div class="chart-wrapper">
+                <canvas id="angleChart"></canvas>
+            </div>
+            
+            <h3>📋 Data History</h3>
             <div class="history-list" id="history"></div>
             <div style="text-align: center; margin-top: 10px; color: #999; font-size: 0.9em;">
                 Latest readings displayed above
@@ -397,12 +409,17 @@
     <script>
         // Data storage
         let dataHistory = [];
+        let angleHistory = [];  // For charting
         const MAX_HISTORY = 20;
+        const MAX_CHART_POINTS = 50;  // Keep last 50 points for chart
         
         // Connection status
         let isConnected = false;
         let lastDataReceived = 0;
         const CONNECTION_TIMEOUT = 5000; // 5 seconds without data = disconnected
+
+        // Chart instance
+        let angleChart = null;
 
         // Initialize with default values
         let currentData = {
@@ -413,6 +430,163 @@
             ayraw: 512,
             azraw: 512
         };
+
+        // Update angle chart with new data
+        function updateAngleChart() {
+            if (!angleChart) {
+                return;  // Chart not initialized yet
+            }
+            
+            // Add new data point
+            const timeLabel = new Date().toLocaleTimeString();
+            angleHistory.push({
+                time: timeLabel,
+                theta: currentData.theta,
+                psi: currentData.psi,
+                phi: currentData.phi
+            });
+            
+            // Keep only last MAX_CHART_POINTS
+            if (angleHistory.length > MAX_CHART_POINTS) {
+                angleHistory.shift();
+            }
+            
+            // Update chart data
+            angleChart.data.labels = angleHistory.map((_, idx) => idx % 5 === 0 ? angleHistory[idx].time : '');
+            angleChart.data.datasets[0].data = angleHistory.map(d => d.theta);
+            angleChart.data.datasets[1].data = angleHistory.map(d => d.psi);
+            angleChart.data.datasets[2].data = angleHistory.map(d => d.phi);
+            
+            angleChart.update('none');  // Update without animation for smooth performance
+        }
+        
+        // Initialize the angle chart
+        function initializeChart() {
+            const ctx = document.getElementById('angleChart').getContext('2d');
+            
+            angleChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Theta (θ) - X-axis',
+                            data: [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        },
+                        {
+                            label: 'Psi (ψ) - Y-axis',
+                            data: [],
+                            borderColor: '#f5576c',
+                            backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        },
+                        {
+                            label: 'Phi (φ) - Z-axis',
+                            data: [],
+                            borderColor: '#00f2fe',
+                            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            padding: 12,
+                            titleFont: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            min: -90,
+                            max: 90,
+                            title: {
+                                display: true,
+                                text: 'Angle (degrees)',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Time',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         // Convert raw ADC value to voltage (0-1023 maps to 0-5V)
         function rawToVoltage(rawValue) {
@@ -504,6 +678,9 @@
             historyDiv.innerHTML = dataHistory.map(item => 
                 `<div class="history-item">${item}</div>`
             ).join('');
+            
+            // Update chart
+            updateAngleChart();
         }
 
         // Update angles from input fields
@@ -598,6 +775,7 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             clearDisplayData();  // Start with no data (disconnected)
+            initializeChart();   // Initialize the angle chart
             
             // Check connection status periodically
             setInterval(updateConnectionStatus, 500);
