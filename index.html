@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inclination Angle Data Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .angles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .angle-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .angle-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .angle-card.theta {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .angle-card.psi {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .angle-card.phi {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .angle-label {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .angle-value {
+            font-size: 3em;
+            font-weight: bold;
+            color: white;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .angle-unit {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .raw-data-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .raw-data-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .raw-data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .raw-data-table th,
+        .raw-data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .raw-data-table th {
+            background-color: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .raw-data-table tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        .raw-data-table td {
+            font-family: 'Courier New', monospace;
+            color: #333;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-field label {
+            font-size: 0.9em;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .form-field input {
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            width: 100px;
+            transition: border-color 0.3s;
+        }
+
+        .form-field input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .chart-container h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .history-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .gauge {
+            display: inline-block;
+            position: relative;
+            width: 100%;
+            max-width: 250px;
+            margin: 20px auto;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .angle-value {
+                font-size: 2em;
+            }
+
+            .angles-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            color: #999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Inclination Angle Monitor</h1>
+        <p class="subtitle">ADXL335 Accelerometer Real-time Data Display</p>
+
+        <div class="status disconnected" id="status">
+            ⚫ Not Connected
+        </div>
+
+        <div class="angles-grid">
+            <div class="angle-card theta">
+                <div class="angle-label">Theta (X-angle)</div>
+                <div class="angle-value" id="theta-value">0.00</div>
+                <div class="angle-unit">degrees</div>
+            </div>
+            <div class="angle-card psi">
+                <div class="angle-label">Psi (Y-angle)</div>
+                <div class="angle-value" id="psi-value">0.00</div>
+                <div class="angle-unit">degrees</div>
+            </div>
+            <div class="angle-card phi">
+                <div class="angle-label">Phi (Z-angle)</div>
+                <div class="angle-value" id="phi-value">0.00</div>
+                <div class="angle-unit">degrees</div>
+            </div>
+        </div>
+
+        <div class="raw-data-section">
+            <h3>Raw Accelerometer Data</h3>
+            <table class="raw-data-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Raw Value</th>
+                        <th>Voltage (V)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>X-Axis (Axraw)</td>
+                        <td id="axraw-value">0</td>
+                        <td id="axout-value">0.00</td>
+                        <td id="ax-status">Idle</td>
+                    </tr>
+                    <tr>
+                        <td>Y-Axis (Ayraw)</td>
+                        <td id="ayraw-value">0</td>
+                        <td id="ayout-value">0.00</td>
+                        <td id="ay-status">Idle</td>
+                    </tr>
+                    <tr>
+                        <td>Z-Axis (Azraw)</td>
+                        <td id="azraw-value">0</td>
+                        <td id="azout-value">0.00</td>
+                        <td id="az-status">Idle</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="controls">
+            <div class="input-group">
+                <div class="form-field">
+                    <label for="theta-input">Theta (°)</label>
+                    <input type="number" id="theta-input" min="-180" max="180" step="0.1" value="0">
+                </div>
+                <div class="form-field">
+                    <label for="psi-input">Psi (°)</label>
+                    <input type="number" id="psi-input" min="-180" max="180" step="0.1" value="0">
+                </div>
+                <div class="form-field">
+                    <label for="phi-input">Phi (°)</label>
+                    <input type="number" id="phi-input" min="-180" max="180" step="0.1" value="0">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="updateAngles()">Update Display</button>
+            <button class="btn-secondary" onclick="generateRandomData()">Random Data</button>
+            <button class="btn-secondary" onclick="resetData()">Reset</button>
+        </div>
+
+        <div class="chart-container">
+            <h3>📊 Data History</h3>
+            <div class="history-list" id="history"></div>
+            <div style="text-align: center; margin-top: 10px; color: #999; font-size: 0.9em;">
+                Latest readings displayed above
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+            <div class="timestamp" id="last-update">Last update: Never</div>
+        </div>
+    </div>
+
+    <script>
+        // Data storage
+        let dataHistory = [];
+        const MAX_HISTORY = 20;
+        
+        // Connection status
+        let isConnected = false;
+        let lastDataReceived = 0;
+        const CONNECTION_TIMEOUT = 5000; // 5 seconds without data = disconnected
+
+        // Initialize with default values
+        let currentData = {
+            theta: 0,
+            psi: 0,
+            phi: 0,
+            axraw: 512,
+            ayraw: 512,
+            azraw: 512
+        };
+
+        // Convert raw ADC value to voltage (0-1023 maps to 0-5V)
+        function rawToVoltage(rawValue) {
+            return (rawValue / 1023.0) * 5.0;
+        }
+
+        // Update display with current data
+        function updateDisplay() {
+            // Update angle displays
+            document.getElementById('theta-value').textContent = currentData.theta.toFixed(2);
+            document.getElementById('psi-value').textContent = currentData.psi.toFixed(2);
+            document.getElementById('phi-value').textContent = currentData.phi.toFixed(2);
+
+            // Update raw data displays
+            document.getElementById('axraw-value').textContent = currentData.axraw;
+            document.getElementById('ayraw-value').textContent = currentData.ayraw;
+            document.getElementById('azraw-value').textContent = currentData.azraw;
+
+            // Calculate and display voltages
+            const axout = rawToVoltage(currentData.axraw);
+            const ayout = rawToVoltage(currentData.ayraw);
+            const azout = rawToVoltage(currentData.azraw);
+
+            document.getElementById('axout-value').textContent = axout.toFixed(3);
+            document.getElementById('ayout-value').textContent = ayout.toFixed(3);
+            document.getElementById('azout-value').textContent = azout.toFixed(3);
+
+            // Update timestamp
+            const now = new Date();
+            document.getElementById('last-update').textContent = 
+                `Last update: ${now.toLocaleTimeString()}`;
+
+            // Add to history
+            addToHistory();
+        }
+        
+        // Update connection status
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('status');
+            const now = Date.now();
+            
+            // Check if we've received data recently
+            if (lastDataReceived > 0 && (now - lastDataReceived) < CONNECTION_TIMEOUT) {
+                if (!isConnected) {
+                    isConnected = true;
+                    statusElement.className = 'status connected';
+                    statusElement.textContent = '🟢 Connected';
+                }
+            } else {
+                if (isConnected) {
+                    isConnected = false;
+                    statusElement.className = 'status disconnected';
+                    statusElement.textContent = '⚫ Not Connected';
+                    // Clear data when disconnected
+                    clearDisplayData();
+                }
+            }
+        }
+        
+        // Clear all displayed data
+        function clearDisplayData() {
+            document.getElementById('theta-value').textContent = '--';
+            document.getElementById('psi-value').textContent = '--';
+            document.getElementById('phi-value').textContent = '--';
+            
+            document.getElementById('axraw-value').textContent = '--';
+            document.getElementById('ayraw-value').textContent = '--';
+            document.getElementById('azraw-value').textContent = '--';
+            
+            document.getElementById('axout-value').textContent = '--';
+            document.getElementById('ayout-value').textContent = '--';
+            document.getElementById('azout-value').textContent = '--';
+            
+            document.getElementById('last-update').textContent = 'Last update: Never';
+        }
+
+        // Add data to history
+        function addToHistory() {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `${timestamp} | θ: ${currentData.theta.toFixed(2)}° | ψ: ${currentData.psi.toFixed(2)}° | φ: ${currentData.phi.toFixed(2)}°`;
+            
+            dataHistory.unshift(entry);
+            if (dataHistory.length > MAX_HISTORY) {
+                dataHistory.pop();
+            }
+
+            // Update history display
+            const historyDiv = document.getElementById('history');
+            historyDiv.innerHTML = dataHistory.map(item => 
+                `<div class="history-item">${item}</div>`
+            ).join('');
+        }
+
+        // Update angles from input fields
+        function updateAngles() {
+            currentData.theta = parseFloat(document.getElementById('theta-input').value) || 0;
+            currentData.psi = parseFloat(document.getElementById('psi-input').value) || 0;
+            currentData.phi = parseFloat(document.getElementById('phi-input').value) || 0;
+
+            // Mark as connected since user is sending data
+            lastDataReceived = Date.now();
+            updateConnectionStatus();
+
+            // Simulate raw values based on angles
+            // This is a rough approximation for demonstration
+            currentData.axraw = Math.min(1023, Math.max(0, 512 + currentData.theta * 2.8));
+            currentData.ayraw = Math.min(1023, Math.max(0, 512 + currentData.psi * 2.8));
+            currentData.azraw = Math.min(1023, Math.max(0, 512 + currentData.phi * 2.8));
+
+            updateDisplay();
+        }
+
+        // Generate random realistic data
+        function generateRandomData() {
+            currentData.theta = (Math.random() - 0.5) * 90;
+            currentData.psi = (Math.random() - 0.5) * 90;
+            currentData.phi = (Math.random() - 0.5) * 90;
+
+            // Mark as connected since we're sending data
+            lastDataReceived = Date.now();
+            updateConnectionStatus();
+
+            // Update raw values to match angles
+            currentData.axraw = Math.min(1023, Math.max(0, 512 + currentData.theta * 2.8));
+            currentData.ayraw = Math.min(1023, Math.max(0, 512 + currentData.psi * 2.8));
+            currentData.azraw = Math.min(1023, Math.max(0, 512 + currentData.phi * 2.8));
+
+            // Update input fields
+            document.getElementById('theta-input').value = currentData.theta.toFixed(1);
+            document.getElementById('psi-input').value = currentData.psi.toFixed(1);
+            document.getElementById('phi-input').value = currentData.phi.toFixed(1);
+
+            updateDisplay();
+        }
+
+        // Reset all data
+        function resetData() {
+            currentData = {
+                theta: 0,
+                psi: 0,
+                phi: 0,
+                axraw: 512,
+                ayraw: 512,
+                azraw: 512
+            };
+
+            document.getElementById('theta-input').value = 0;
+            document.getElementById('psi-input').value = 0;
+            document.getElementById('phi-input').value = 0;
+
+            // Mark as disconnected
+            isConnected = false;
+            lastDataReceived = 0;
+            updateConnectionStatus();
+            clearDisplayData();
+        }
+
+        // Simulate auto-update (like from a serial connection)
+        function simulateSerialData() {
+            // Only simulate if user explicitly triggers it (not auto-running)
+            if (!isConnected) {
+                return;
+            }
+            
+            // Add small random variations for realistic motion
+            currentData.theta += (Math.random() - 0.5) * 2;
+            currentData.psi += (Math.random() - 0.5) * 2;
+            currentData.phi += (Math.random() - 0.5) * 2;
+
+            // Clamp values
+            currentData.theta = Math.max(-90, Math.min(90, currentData.theta));
+            currentData.psi = Math.max(-90, Math.min(90, currentData.psi));
+            currentData.phi = Math.max(-90, Math.min(90, currentData.phi));
+
+            // Update raw values
+            currentData.axraw = Math.min(1023, Math.max(0, 512 + currentData.theta * 2.8));
+            currentData.ayraw = Math.min(1023, Math.max(0, 512 + currentData.psi * 2.8));
+            currentData.azraw = Math.min(1023, Math.max(0, 512 + currentData.phi * 2.8));
+
+            updateDisplay();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            clearDisplayData();  // Start with no data (disconnected)
+            
+            // Check connection status periodically
+            setInterval(updateConnectionStatus, 500);
+        });
+
+        // Allow pressing Enter to update angles
+        document.getElementById('theta-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') updateAngles();
+        });
+        document.getElementById('psi-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') updateAngles();
+        });
+        document.getElementById('phi-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') updateAngles();
+        });
+        
+        // WebSocket connection to receive real-time updates
+        function setupWebSocket() {
+            try {
+                const ws = new WebSocket(`ws://${window.location.host}`);
+                
+                ws.onmessage = (event) => {
+                    try {
+                        const message = JSON.parse(event.data);
+                        
+                        if (message.type === 'angle_update' && message.data) {
+                            // Update data from received message
+                            currentData.theta = message.data.theta || 0;
+                            currentData.psi = message.data.psi || 0;
+                            currentData.phi = message.data.phi || 0;
+                            currentData.axraw = message.data.axraw || 512;
+                            currentData.ayraw = message.data.ayraw || 512;
+                            currentData.azraw = message.data.azraw || 512;
+                            
+                            // Mark as connected from real data source
+                            lastDataReceived = Date.now();
+                            updateConnectionStatus();
+                            updateDisplay();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing WebSocket message:', e);
+                    }
+                };
+                
+                ws.onerror = (error) => {
+                    console.log('WebSocket error (expected if no real data):', error);
+                };
+            } catch (e) {
+                console.log('WebSocket not available (using REST API)');
+            }
+        }
+        
+        // Setup WebSocket on page load
+        setupWebSocket();
+    </script>
+</body>
+</html>

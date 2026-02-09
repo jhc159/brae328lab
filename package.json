@@ -1,0 +1,31 @@
+{
+  "name": "inclination-angle-monitor",
+  "version": "1.0.0",
+  "description": "Web application to display raw angle data from ADXL335 accelerometer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "list-ports": "node list_ports.js",
+    "serial-bridge": "node serial_bridge.js"
+  },
+  "keywords": [
+    "accelerometer",
+    "ADXL335",
+    "angle",
+    "visualization",
+    "real-time"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.13.0",
+    "serialport": "^11.0.0",
+    "@serialport/parser-readline": "^11.0.0",
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
