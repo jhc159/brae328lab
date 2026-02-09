@@ -7,6 +7,10 @@ Now you are going to build an automatic vehicle collision detection system. Chan
 Try if/else statement to develop this collision detection system. Then try while statement and build the same collision detection system.
 
 prompt
+update arduino_vehicle_collision:
 
-if: acceleration ±2.8g, blink onboard led 3 sec
-else: nothing
+read every 2m/s
+
+if: acceleration ±2.8g, blink onboard led 3 sec else: nothing
+
+create if/else variation and while variation
